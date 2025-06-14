@@ -10,6 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use function Pest\Laravel\withMiddleware;
 
+Route::get('/', function (Request $request) {
+    return response()->json([
+        'success' => true,
+        'data' => 'how did we get here?'
+    ]);
+});
 
 Route::get('/user', function (Request $request) {
     return $request->user();
