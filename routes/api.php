@@ -15,7 +15,7 @@ Route::get('/', function (Request $request) {
         'success' => true,
         'data' => 'how did we get here?'
     ]);
-});
+})->name('login');
 
 Route::get('/user', function (Request $request) {
     return $request->user();
