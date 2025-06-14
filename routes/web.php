@@ -10,5 +10,5 @@ Route::get('/', function () {
     ])->setStatusCode(400);
 });
 Route::get('/test', function () {
-    return Route::getRoutes();
+    return response()->json(Route::getRoutes());
 });
