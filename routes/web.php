@@ -10,5 +10,5 @@ Route::get('/', function () {
     ])->setStatusCode(400);
 });
 Route::get('/test', function () {
-    return 'bad';
+    return Route::getRoutes();
 });
