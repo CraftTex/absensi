@@ -64,7 +64,7 @@ class GeminiController extends Controller
         //         )
         //     )
         ->generateContent([
-            'Dari file surat keterangan dokter berikut, gunakan POV seperti anda mengisi formulir yang berisikan kolom Nama, Umur, Pekerjaan, NIK, Alamat, Nama Dokter, dan tambahan. kolom tambahan berisikan keterangan penting lainnya yang belum terdata pada kolom-kolom tadi dengan maksimum kata sebanyak 50, keluarkan hanya hasil saja dengan format JSON',
+            'Dari file surat keterangan dokter berikut, gunakan POV seperti anda mengisi formulir yang berisikan kolom nama, umur, pekerjaan, nik, alamat, nama_dokter, tanggal_mulai, tanggal_akhir, dan tambahan. kolom tambahan berisikan keterangan penting lainnya yang belum terdata pada kolom-kolom tadi dengan maksimum kata sebanyak 50, dan format tanggal berupa YYYY-MM-DD keluarkan hanya hasil saja dengan format JSON',
             new Blob(
                 mimeType: $fileMime,
                 data: base64_encode($validated['file']->get())

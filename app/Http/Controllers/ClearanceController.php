@@ -65,7 +65,7 @@ class ClearanceController extends Controller
         //         )
         //     )
         ->generateContent([
-            'Dari file surat keterangan dokter berikut, gunakan POV seperti anda mengisi formulir yang berisikan kolom Nama, Umur, Pekerjaan, NIK, Alamat, Nama Dokter, dan tambahan. kolom tambahan berisikan keterangan penting lainnya yang belum terdata pada kolom-kolom tadi dengan maksimum kata sebanyak 50, keluarkan hanya hasil saja dengan format JSON',
+            'Dari file surat keterangan dokter berikut, gunakan POV seperti anda mengisi formulir yang berisikan kolom nama, umur, pekerjaan, nik, alamat, nama_dokter, tanggal_mulai, tanggal_akhir, dan tambahan. kolom tambahan berisikan keterangan penting lainnya yang belum terdata pada kolom-kolom tadi dengan maksimum kata sebanyak 50, dan format tanggal berupa YYYY-MM-DD keluarkan hanya hasil saja dengan format JSON',
             new Blob(
                 mimeType: $fileMime,
                 data: base64_encode($file->get())
@@ -106,9 +106,9 @@ class ClearanceController extends Controller
     public function create(Request $request) {
         $validated = $request->validate([
             'jenis' => 'required',
-            'alasan' => 'required',
-            'tanggal_mulai' => 'required|date_format:Y-m-d',
-            'tanggal_akhir' => 'required|date_format:Y-m-d',
+            'alasan' => 'nullable',
+            'tanggal_mulai' => 'nullable|date_format:Y-m-d',
+            'tanggal_akhir' => 'nullable|date_format:Y-m-d',
             'bukti' => 'required|file',
         ]);
 
@@ -117,19 +117,27 @@ class ClearanceController extends Controller
         
         $clearance->user_id = $request->user()->id;
         $clearance->jenis = $request->jenis;
-        $clearance->alasan = $request->alasan;
-        $clearance->tanggal_mulai = $request->tanggal_mulai;
-        $clearance->tanggal_akhir = $request->tanggal_akhir;
+        // $clearance->alasan = $request->alasan;
+        // $clearance->tanggal_mulai = $request->tanggal_mulai;
+        // $clearance->tanggal_akhir = $request->tanggal_akhir;
         $clearance->tanggal_pengajuan = Carbon::now()->toDateString();
+        $reply = $this->analyzeFile($validated['bukti']);
+        // $json_reply = json_decode($reply);
+        // dd($request->alasan ? $request->alasan : $json_reply->tambahan);
         
         $path = ClearanceController::storeFile($request->file('bukti'));
         if ($path) {
             $clearance->bukti = $path;
-            $reply = $this->analyzeFile($validated['bukti']);
+            // $reply = $this->analyzeFile($validated['bukti']);
             if ($reply) {
+                $json_reply = json_decode($reply);
+                $clearance->alasan = $request->alasan ? $request->alasan : $json_reply->tambahan;
+                $clearance->tanggal_mulai =  $request->tanggal_mulai ? $request->tanggal_mulai : $json_reply->tanggal_mulai;
+                $clearance->tanggal_akhir =  $request->tanggal_akhir ? $request->tanggal_akhir : $json_reply->tanggal_akhir;
                 $clearance->details = $reply;
+                
                 if ($clearance->save()) {
-                    $clearance->details = json_decode($reply);
+                    $clearance->details = $json_reply;
                     return response()->json([
                         'success' => true,
                         'data' => [$clearance]
