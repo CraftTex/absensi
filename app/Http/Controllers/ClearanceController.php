@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Clearance;
+use App\Models\Storage as ModelsStorage;
 use Carbon\Carbon;
+use finfo;
 use Gemini\Data\Blob;
 use Gemini\Enums\MimeType;
 use Gemini\Laravel\Facades\Gemini;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Ramsey\Uuid\Uuid;
 
 class ClearanceController extends Controller
 {
@@ -85,6 +88,21 @@ class ClearanceController extends Controller
         // return view('empty', ['reply' => $response->text()]);
     }
 
+    public static function storeFile($fileData) {
+        $path = $fileData->getRealPath();
+        // dd($blob_file);
+        $actual_file = file_get_contents($path);
+        $blob_file = base64_encode($actual_file);
+        $storage = new ModelsStorage;
+        $storage->file = $blob_file;
+        $storage->file_name = Uuid::uuid4();
+
+        if ($storage->save()) {
+            return $storage->file_name;
+        }
+        return false;
+    }
+
     public function create(Request $request) {
         $validated = $request->validate([
             'jenis' => 'required',
@@ -104,7 +122,7 @@ class ClearanceController extends Controller
         $clearance->tanggal_akhir = $request->tanggal_akhir;
         $clearance->tanggal_pengajuan = Carbon::now()->toDateString();
         
-        $path = $request->file('bukti')->store();
+        $path = ClearanceController::storeFile($request->file('bukti'));
         if ($path) {
             $clearance->bukti = $path;
             $reply = $this->analyzeFile($validated['bukti']);
@@ -171,8 +189,30 @@ class ClearanceController extends Controller
     }
 
     public function retrieveBukti(Request $request, $id) {
-        $path = Storage::path(Clearance::where(['id' => $id])->first()->bukti);
-        return response()->file($path);
+        $clearance = Clearance::where(['id' => $id])->first();
+        if (! $clearance) {
+            return response()->json([
+                'success' => false,
+                'error' => 'no clearance matches the id'
+            ]);
+        }
+        $path = $clearance->bukti;
+        // dd($path);
+
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $storage = ModelsStorage::where(['file_name' => $path])->first();
+        // dd($storage);
+        $document = stream_get_contents($storage->file);
+        $file = base64_decode($document);
+        $mimeType = $finfo->buffer($file);
+        return response($file)
+    ->header('Cache-Control', 'no-cache private')
+    ->header('Content-Description', 'File Transfer')
+    ->header('Content-Type', $mimeType)
+    ->header('Content-length', strlen($file))
+    ->header('Content-Disposition', 'attachment; filename=' . $storage->file_name)
+    ->header('Content-Transfer-Encoding', 'binary');
+        // return response()->file($path);
     }
 
     public function getAll() {

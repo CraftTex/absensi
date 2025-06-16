@@ -6,6 +6,7 @@ use App\Http\Controllers\ClearanceController;
 use App\Http\Controllers\GeminiController;
 use App\Http\Controllers\HRDController;
 use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\StorageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use function Pest\Laravel\withMiddleware;
@@ -57,3 +58,7 @@ Route::post('/clearance', [ClearanceController::class, 'create'])->middleware('a
 Route::put('/clearance/{id}', [ClearanceController::class, 'updateStatus'])->middleware(['auth:sanctum', 'ability:member-hrd']);
 Route::get('/clearance/{id}', [ClearanceController::class, 'getDetailed'])->middleware('auth:sanctum');
 Route::get('/clearance/{id}/bukti', [ClearanceController::class, 'retrieveBukti'])->middleware('auth:sanctum');
+
+// Route::post('/storage/image', [StorageController::class, 'test']);
+// Route::post('/storage/image/get', [StorageController::class, 'testGet']);
+
